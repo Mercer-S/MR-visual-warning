@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace MR_Server
@@ -13,20 +14,107 @@ namespace MR_Server
     {
         static void Main(string[] args)
         {
+            string ipAddressServer = "192.168.56.1";
+            string udpPort = "9998";
+            string tcpPort = "9999";
+            
             Console.WriteLine("Initialising...");
-            TcpServer tcpServer = new TcpServer();
-            tcpServer.TcpServerStart();
-            Console.WriteLine("Enter \"exit server\" to exit.");
+            Console.WriteLine("Default IP address: " + ipAddressServer );
+            Console.WriteLine("UDP Port: " + ipAddressServer + "; TCP Port: " + tcpPort);
+            
+            while (true) //change IP
+            {
+                string userIp = "";
+                Console.WriteLine("Please enter your server IP address (press Enter to use default IP): ");
+                userIp = Console.ReadLine().Trim();
+                if(userIp == "")
+                {
+                    Console.WriteLine("Ip: " + ipAddressServer);
+                    break;
+                }
+
+                if (IpCheck(userIp))
+                {
+                    ipAddressServer = userIp;
+                    break;
+                }
+                Console.WriteLine("Invalid ip address.");
+            }
+
+            string serverOpt;
             while (true)
             {
-                String str = Console.ReadLine();
+                Console.Write("Which server do you want to activate (TCP/UDP/both): ");
+                serverOpt = Console.ReadLine().Trim().ToLower();
+                if (serverOpt == "tcp")
+                {
+                    TcpServer tcpServer = new TcpServer(ipAddressServer, tcpPort);
+                    tcpServer.TcpServerStart();
+                    ReadConsoleMessage(tcpServer);
+                    break;
+                }
+                else if (serverOpt == "udp")
+                {
+                    UdpServer udpServer = new UdpServer(ipAddressServer, udpPort);
+                    udpServer.UdpServerStart();
+                    break;
+                }
+                else if(serverOpt == "both") 
+                {
+                    TcpServer tcpServer = new TcpServer(ipAddressServer, tcpPort);
+                    tcpServer.TcpServerStart();
+                    UdpServer udpServer = new UdpServer(ipAddressServer, udpPort);
+                    udpServer.UdpServerStart();
+                    ReadConsoleMessage(tcpServer);
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input.");
+                }
+            }
+        }
+
+        private static void ReadConsoleMessage(TcpServer tcpServer)
+        {
+            Console.WriteLine("Enter \"exit server\" to exit.");
+            String str = "";
+            while (true) //send server message
+            {
+                try
+                {
+                    str = Console.ReadLine();
+                }
+                finally { }
+
                 if (str == "exit server")
                     break;
+                else if (str == "") { }
                 else
                 {
                     tcpServer.ServerSend(str);
+                    str = "";
+                }
+                
+            }
+        }
+        private static bool IpCheck(string ip)
+        {
+            Regex regex = new Regex("^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$");
+            if (!regex.IsMatch(ip))
+                return false;
+            
+            string[] spIp = ip.Split(new char[] { '.' });
+            if (spIp.Length != 4)
+                return false;
+            foreach(string num in spIp)
+            {
+                if (Convert.ToInt16(num) > 255)
+                {
+                    return false;
                 }
             }
+            return true;
         }
     }
     
@@ -35,11 +123,23 @@ namespace MR_Server
     /// </summary>
     public class TcpServer
     {
-        private List<Socket> _clientProxSocketList = new List<Socket>(); 
-        
         //define server IP and Port. The port should be accessible. 
-        private string _ipAddressServer = "192.168.1.104"; 
-        private string _portServer = "9999";
+        private string _ipAddressServer; 
+        private string _portServer;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ipAddressServer"></param>
+        /// <param name="portServer"></param>
+        public TcpServer(string ipAddressServer, string portServer)
+        { 
+            _ipAddressServer = ipAddressServer; 
+            _portServer = portServer;
+        }
+        
+        private List<Socket> _clientProxSocketList = new List<Socket>();
+
         private byte[] _imageBuffer = new byte[] {0};
         private int _imageLen = 0;
 
@@ -49,26 +149,32 @@ namespace MR_Server
         /// <returns></returns>
         public void TcpServerStart()
         {
-            PrintConsole("IP address: " + _ipAddressServer);
-            PrintConsole("Port: " + _portServer);
             Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            serverSocket.Bind(new IPEndPoint(IPAddress.Parse(_ipAddressServer), int.Parse(_portServer)));
+            try
+            {
+                serverSocket.Bind(new IPEndPoint(IPAddress.Parse(_ipAddressServer), int.Parse(_portServer)));
+            }
+            catch
+            {
+                Console.WriteLine("TCP socket: Wrong IP address and/or Port.");
+                return;
+            }
             serverSocket.Listen(10); //listen 10 connecting requirement at the same time. 
-            PrintConsole("Socket generated.");
+            PrintConsole("TCP Socket generated.");
             
             // put the receiving connections function into thread pool
             ThreadPool.QueueUserWorkItem(new WaitCallback(AcceptClientConnect), serverSocket);
         }
 
         /// <summary>
-        /// Accept Client Connection requirement.
+        /// Accept client connection requirement.
         /// </summary>
         /// <param name="socket">A tcp socket created for communication</param>
         private void AcceptClientConnect(object socket)
         {
             Socket serverSocket = socket as Socket; //back to Socket type  
 
-            PrintConsole("start receiving.");
+            PrintConsole("TCP socket start receiving.");
 
             while (true) //keep receiving connections
             {
@@ -297,6 +403,85 @@ namespace MR_Server
             //string milisec = DateTime.Now.Millisecond.ToString().PadLeft(3, '0');
             string CurrentTimeText = string.Format("{0:D2}:{1:D2}:{2:D2}", hour, min, sec);
             Console.WriteLine("(" + CurrentTimeText + ")" + string.Format("{0}", txt));
+        }
+    }
+
+    public class UdpServer
+    {
+        private EndPoint _endPoint;
+
+        /// <summary>
+        /// define server IP and Port. The port should be accessible.
+        /// </summary>
+        /// <param name="ipAddressServer"></param>
+        /// <param name="portServer"></param>
+        public UdpServer(string ipAddressServer, string portServer)
+        {
+            _endPoint = new IPEndPoint(IPAddress.Parse(ipAddressServer), int.Parse(portServer));
+        }
+
+        /// <summary>
+        /// Start the UDP server 
+        /// </summary>
+        /// <returns></returns>
+        public void UdpServerStart()
+        {
+            Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            
+            try
+            {
+                serverSocket.Bind(_endPoint);
+            }
+            catch
+            {
+                Console.WriteLine("UDP socket: Wrong IP address and/or Port.");
+                return;
+            }
+
+            ThreadPool.QueueUserWorkItem(new WaitCallback(ReceiveData), serverSocket);
+        }
+
+        /// <summary>
+        /// receive data from Object tracking modules
+        /// </summary>
+        /// <param name="socket"></param>
+        void ReceiveData(object socket)
+        {
+            Socket proxSocket = socket as Socket;
+            PrintConsole("UDP Socket generated.");
+            while (true)
+            {
+                byte[] buffer = new byte[64];
+                int len = proxSocket.ReceiveFrom(buffer, SocketFlags.None, ref _endPoint);
+                string data = Encoding.Default.GetString(buffer, 0, len);
+                PrintConsole(data);
+                ForwardData(data, proxSocket);
+            }
+        }
+        
+        /// <summary>
+        /// forward data to HoloLens
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="socket"></param>
+        void ForwardData(string data, Socket socket)
+        {
+            byte[] btData = Encoding.Default.GetBytes(data + "$");
+            socket.SendTo(btData, 0, btData.Length, SocketFlags.None, _endPoint);
+        }
+        
+        /// <summary>
+        /// print texts to the console
+        /// </summary>
+        /// <param name="txt"></param>
+        private void PrintConsole(string txt)
+        {
+            string hour = DateTime.Now.Hour.ToString().PadLeft(2, '0');
+            string min = DateTime.Now.Minute.ToString().PadLeft(2, '0');
+            string sec = DateTime.Now.Second.ToString().PadLeft(2, '0');
+            //string milisec = DateTime.Now.Millisecond.ToString().PadLeft(3, '0');
+            string CurrentTimeText = string.Format("{0:D2}:{1:D2}:{2:D2}", hour, min, sec);
+            Console.WriteLine("(" + CurrentTimeText + ") UDP: " + string.Format("{0}", txt));
         }
     }
 }
