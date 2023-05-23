@@ -14,7 +14,7 @@ namespace MR_Server
     {
         static void Main(string[] args)
         {
-            string ipAddressServer = "192.168.56.1";
+            string ipAddressServer = "192.168.1.113";
             string udpPort = "9998";
             string tcpPort = "9999";
             
