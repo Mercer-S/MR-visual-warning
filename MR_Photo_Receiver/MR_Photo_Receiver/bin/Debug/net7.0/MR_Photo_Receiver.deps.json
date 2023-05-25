@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v7.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v7.0": {
+      "MR_Photo_Receiver/1.0.0": {
+        "runtime": {
+          "MR_Photo_Receiver.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "MR_Photo_Receiver/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

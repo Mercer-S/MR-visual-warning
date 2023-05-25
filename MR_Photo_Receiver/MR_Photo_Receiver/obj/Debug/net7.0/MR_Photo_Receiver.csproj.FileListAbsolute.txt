@@ -1,0 +1,15 @@
+C:\Users\s3767614\Mercer\git\MR-visual-warning\MR_Photo_Receiver\MR_Photo_Receiver\bin\Debug\net7.0\MR_Photo_Receiver.exe
+C:\Users\s3767614\Mercer\git\MR-visual-warning\MR_Photo_Receiver\MR_Photo_Receiver\bin\Debug\net7.0\MR_Photo_Receiver.deps.json
+C:\Users\s3767614\Mercer\git\MR-visual-warning\MR_Photo_Receiver\MR_Photo_Receiver\bin\Debug\net7.0\MR_Photo_Receiver.runtimeconfig.json
+C:\Users\s3767614\Mercer\git\MR-visual-warning\MR_Photo_Receiver\MR_Photo_Receiver\bin\Debug\net7.0\MR_Photo_Receiver.dll
+C:\Users\s3767614\Mercer\git\MR-visual-warning\MR_Photo_Receiver\MR_Photo_Receiver\bin\Debug\net7.0\MR_Photo_Receiver.pdb
+C:\Users\s3767614\Mercer\git\MR-visual-warning\MR_Photo_Receiver\MR_Photo_Receiver\obj\Debug\net7.0\MR_Photo_Receiver.csproj.AssemblyReference.cache
+C:\Users\s3767614\Mercer\git\MR-visual-warning\MR_Photo_Receiver\MR_Photo_Receiver\obj\Debug\net7.0\MR_Photo_Receiver.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\s3767614\Mercer\git\MR-visual-warning\MR_Photo_Receiver\MR_Photo_Receiver\obj\Debug\net7.0\MR_Photo_Receiver.AssemblyInfoInputs.cache
+C:\Users\s3767614\Mercer\git\MR-visual-warning\MR_Photo_Receiver\MR_Photo_Receiver\obj\Debug\net7.0\MR_Photo_Receiver.AssemblyInfo.cs
+C:\Users\s3767614\Mercer\git\MR-visual-warning\MR_Photo_Receiver\MR_Photo_Receiver\obj\Debug\net7.0\MR_Photo_Receiver.csproj.CoreCompileInputs.cache
+C:\Users\s3767614\Mercer\git\MR-visual-warning\MR_Photo_Receiver\MR_Photo_Receiver\obj\Debug\net7.0\MR_Photo_Receiver.dll
+C:\Users\s3767614\Mercer\git\MR-visual-warning\MR_Photo_Receiver\MR_Photo_Receiver\obj\Debug\net7.0\refint\MR_Photo_Receiver.dll
+C:\Users\s3767614\Mercer\git\MR-visual-warning\MR_Photo_Receiver\MR_Photo_Receiver\obj\Debug\net7.0\MR_Photo_Receiver.pdb
+C:\Users\s3767614\Mercer\git\MR-visual-warning\MR_Photo_Receiver\MR_Photo_Receiver\obj\Debug\net7.0\MR_Photo_Receiver.genruntimeconfig.cache
+C:\Users\s3767614\Mercer\git\MR-visual-warning\MR_Photo_Receiver\MR_Photo_Receiver\obj\Debug\net7.0\ref\MR_Photo_Receiver.dll
