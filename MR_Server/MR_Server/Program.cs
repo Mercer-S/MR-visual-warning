@@ -14,22 +14,21 @@ namespace MR_Server
     {
         static void Main(string[] args)
         {
-            string ipAddressServer = "192.168.1.113";
+            string ipAddressServer = "172.31.19.217";
             string udpPort = "9998";
             string tcpPort = "9999";
             
             Console.WriteLine("Initialising...");
             Console.WriteLine("Default IP address: " + ipAddressServer );
-            Console.WriteLine("UDP Port: " + ipAddressServer + "; TCP Port: " + tcpPort);
+            Console.WriteLine("UDP Port: " + udpPort + "; TCP Port: " + tcpPort);
             
             while (true) //change IP
             {
-                string userIp = "";
-                Console.WriteLine("Please enter your server IP address (press Enter to use default IP): ");
-                userIp = Console.ReadLine().Trim();
+                Console.WriteLine("Please enter your server IP address (press Enter to use the default IP): ");
+                string userIp = Console.ReadLine().Trim();
                 if(userIp == "")
                 {
-                    Console.WriteLine("Ip: " + ipAddressServer);
+                    Console.WriteLine("Using default Ip: " + ipAddressServer);
                     break;
                 }
 
@@ -40,32 +39,28 @@ namespace MR_Server
                 }
                 Console.WriteLine("Invalid ip address.");
             }
-
-            string serverOpt;
+            
+            TcpServer tcpServer = new TcpServer(ipAddressServer, tcpPort);
+            UdpServer udpServer = new UdpServer(ipAddressServer, udpPort);
+            
             while (true)
             {
                 Console.Write("Which server do you want to activate (TCP/UDP/both): ");
-                serverOpt = Console.ReadLine().Trim().ToLower();
+                string serverOpt = Console.ReadLine().Trim().ToLower();
                 if (serverOpt == "tcp")
                 {
-                    TcpServer tcpServer = new TcpServer(ipAddressServer, tcpPort);
                     tcpServer.TcpServerStart();
-                    ReadConsoleMessage(tcpServer);
                     break;
                 }
                 else if (serverOpt == "udp")
                 {
-                    UdpServer udpServer = new UdpServer(ipAddressServer, udpPort);
                     udpServer.UdpServerStart();
                     break;
                 }
-                else if(serverOpt == "both") 
+                else if(serverOpt == "both" || serverOpt == "") 
                 {
-                    TcpServer tcpServer = new TcpServer(ipAddressServer, tcpPort);
                     tcpServer.TcpServerStart();
-                    UdpServer udpServer = new UdpServer(ipAddressServer, udpPort);
                     udpServer.UdpServerStart();
-                    ReadConsoleMessage(tcpServer);
                     break;
                 }
                 else
@@ -73,6 +68,10 @@ namespace MR_Server
                     Console.WriteLine("Invalid input.");
                 }
             }
+
+            Thread.Sleep(1000);
+            ReadConsoleMessage(tcpServer);
+            
         }
 
         private static void ReadConsoleMessage(TcpServer tcpServer)
@@ -124,8 +123,8 @@ namespace MR_Server
     public class TcpServer
     {
         //define server IP and Port. The port should be accessible. 
-        private string _ipAddressServer; 
-        private string _portServer;
+        private readonly string _ipAddressServer; 
+        private readonly string _portServer;
         
         /// <summary>
         /// 
@@ -137,11 +136,6 @@ namespace MR_Server
             _ipAddressServer = ipAddressServer; 
             _portServer = portServer;
         }
-        
-        private List<Socket> _clientProxSocketList = new List<Socket>();
-
-        private byte[] _imageBuffer = new byte[] {0};
-        private int _imageLen = 0;
 
         /// <summary>
         /// Start the TCP server 
@@ -166,6 +160,8 @@ namespace MR_Server
             ThreadPool.QueueUserWorkItem(new WaitCallback(AcceptClientConnect), serverSocket);
         }
 
+        private List<Socket> _clientProxSocketList = new List<Socket>();
+        
         /// <summary>
         /// Accept client connection requirement.
         /// </summary>
@@ -178,13 +174,13 @@ namespace MR_Server
 
             while (true) //keep receiving connections
             {
-                Socket proxSocket = serverSocket.Accept(); //may block current thread, so we use asynchronous.
-                PrintConsole(string.Format("Client {0} connected", proxSocket.RemoteEndPoint));
-                ServerSend(string.Format("Client {0} connected", proxSocket.RemoteEndPoint));
-                _clientProxSocketList.Add(proxSocket);
+                Socket clientSocket = serverSocket.Accept(); //may block current thread, so we use asynchronous.
+                PrintConsole(string.Format("Client {0} connected", clientSocket.RemoteEndPoint));
+                ServerSend(string.Format("Client {0} connected", clientSocket.RemoteEndPoint));
+                _clientProxSocketList.Add(clientSocket);
                 
                 // put the receiving data function into thread pool
-                ThreadPool.QueueUserWorkItem(new WaitCallback(ReceiveData), proxSocket);
+                ThreadPool.QueueUserWorkItem(new WaitCallback(ReceiveData), clientSocket);
             }
         }
 
@@ -194,102 +190,135 @@ namespace MR_Server
         /// <param name="socket"></param>
         private void ReceiveData(object socket)
         {
-            Socket proxSocket = socket as Socket;
+            Socket clientSocket = socket as Socket;
             while (true)
             {
                 int len = 0;
-                byte[] data = new byte[63 * 1024 + 6];
+                byte[] receiveBuffer = new byte[63 * 1024 + 6];
                 try
                 {
-                    len = proxSocket.Receive(data, 0, data.Length, SocketFlags.None);
-                    data = data.Take(len).ToArray();
+                    len = clientSocket.Receive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None);
+                    receiveBuffer = receiveBuffer.Take(len).ToArray();
                     //Array.ConstrainedCopy(data, 0, data, 0, len);
                 }
                 catch (Exception ex)
                 {
                     //Exceptional exit
-                    PrintConsole("receive: " +
-                                 string.Format("Client {0} disconnected", proxSocket.RemoteEndPoint));
-                    ServerSend("Client " + proxSocket.RemoteEndPoint + " disconnected");
-                    _clientProxSocketList.Remove(proxSocket);
-                    StopConnect(proxSocket);
+                    PrintConsole($"receive: Client {clientSocket.RemoteEndPoint} disconnected");
+                    ServerSend($"Client {clientSocket.RemoteEndPoint} disconnected");
+                    _clientProxSocketList.Remove(clientSocket);
+                    StopConnect(clientSocket);
                     return;
                 }
 
                 //client exit normally
                 if (len <= 0)
                 {
-                    PrintConsole(
-                        "receive: " + string.Format("Client {0} quit", proxSocket.RemoteEndPoint));
-                    ServerSend("Client " + proxSocket.RemoteEndPoint + " quit");
-                    _clientProxSocketList.Remove(proxSocket);
-                    StopConnect(proxSocket);
+                    PrintConsole($"receive: Client {clientSocket.RemoteEndPoint} quit");
+                    ServerSend($"Client {clientSocket.RemoteEndPoint} quit");
+                    _clientProxSocketList.Remove(clientSocket);
+                    StopConnect(clientSocket);
                     return;
                 }
                 
-                ProcessData(data, proxSocket);
+                DataPreprocess(receiveBuffer, clientSocket);
             }
         }
+
+        byte[] _continueReceivingBuffer = Array.Empty<byte>();
+        int _continueReceivingLen = 0;
         
+        private void DataPreprocess(byte[] data, Socket proxSocket)
+        {
+            int head = Convert.ToUInt16(data[0]) * 100 + Convert.ToUInt16(data[1]) * 10 + Convert.ToUInt16(data[2]);
+            int len = Convert.ToUInt16(data[3]) * 256*256 + Convert.ToUInt16(data[4]) * 256 + Convert.ToUInt16(data[5]);
+            if (head == 101 || head == 231 || head == 321 || head == 232)
+            {
+                _continueReceivingBuffer = Array.Empty<byte>();
+                _continueReceivingLen = 0;
+                if (len <= data.Length - 6) // finished package
+                {
+                    ProcessData(data, proxSocket);
+                    return;
+                }
+                else // unfinished package
+                {
+                    _continueReceivingBuffer = data;
+                    _continueReceivingLen = len;
+                    PrintConsole($"Unfinished package received, type: {head}, length: {len}");
+                    return;
+                }
+            }
+            else if (_continueReceivingLen > 0)
+            {
+                byte[] tempBuffer = new byte[data.Length + _continueReceivingBuffer.Length]; 
+                Array.ConstrainedCopy(_continueReceivingBuffer, 0, tempBuffer, 0, _continueReceivingBuffer.Length);
+                Array.ConstrainedCopy(data, 0, tempBuffer, _continueReceivingBuffer.Length, data.Length);
+                _continueReceivingBuffer = tempBuffer;
+                
+                PrintConsole("(" + _continueReceivingBuffer.Length.ToString() + "/" + _continueReceivingLen + ") bytes received");
+                
+                if (_continueReceivingBuffer.Length == _continueReceivingLen + 6)
+                {
+                    PrintConsole("Data receiving completed");
+                    ProcessData(_continueReceivingBuffer, proxSocket);
+                }
+                if (_continueReceivingBuffer.Length > _continueReceivingLen + 6)
+                {
+                    PrintConsole("Data receiving completed");
+                    byte[] wholePackage = new byte[_continueReceivingLen + 6]; 
+                    Array.ConstrainedCopy(_continueReceivingBuffer, 0, wholePackage, 0, wholePackage.Length);
+                    ProcessData(wholePackage, proxSocket);
+
+                    byte[] anotherPackage = new byte[_continueReceivingBuffer.Length - (_continueReceivingLen + 6)]; 
+                    Array.ConstrainedCopy(_continueReceivingBuffer, (_continueReceivingLen + 6), anotherPackage, 0, anotherPackage.Length);
+                    DataPreprocess(anotherPackage, proxSocket);
+                }
+            }
+        }
+
         /// <summary>
-        /// 
+        /// process the received data
         /// </summary>
-        /// <param name="data"></param>
-        /// <param name="proxSocket"></param>
+        /// <param name="data">the received data</param>
+        /// <param name="proxSocket">client socket</param>
         private void ProcessData(byte[] data, Socket proxSocket)
         {
             int head = Convert.ToUInt16(data[0]) * 100 + Convert.ToUInt16(data[1]) * 10 + Convert.ToUInt16(data[2]);
             int len = Convert.ToUInt16(data[3]) * 256*256 + Convert.ToUInt16(data[4]) * 256 + Convert.ToUInt16(data[5]);
-            //HoloLens text message to AI, type = 231
-            if (head == 231)
+
+            //Server text message to All, type = 101
+            if (head == 101)
             {
-                string msg = Encoding.Default.GetString(data, 6, len); 
+                
+            }
+            
+            //HoloLens text message to AI, type = 231
+            else if (head == 231)
+            {
+                string msg = Encoding.Default.GetString(data, 6, data.Length - 6); 
                 string[] sMsg = msg.Split('$'); 
-                PrintConsole("receive: " + 
-                                    string.Format("Client {0}: {1} ({2} bytes)", proxSocket.RemoteEndPoint.ToString(), msg, len));
+                PrintConsole($"receive: Client {proxSocket.RemoteEndPoint}: {msg} ({len} bytes)");
                 QuerySend(sMsg[0]);
             }
             
             //python answer message to HoloLens, type = 321 
             else if (head == 321)
             {
-                string msg = Encoding.Default.GetString(data, 6, len);
+                string msg = Encoding.Default.GetString(data, 6, data.Length - 6);
                 string[] sMsg = msg.Split('$');
-                PrintConsole("receive: " +
-                                    string.Format("Client {0}: {1} ({2} bytes)", proxSocket.RemoteEndPoint.ToString(), msg, len));
+                PrintConsole($"receive: Client {proxSocket.RemoteEndPoint}: {msg} ({len} bytes)");
                 AnswerSend(sMsg[0]);
             }
             
             //HoloLens image message to AI, type = 232
             else if (head == 232)
             {
-                PrintConsole(string.Format("receive: Photo from {0} ({1} bytes)", proxSocket.RemoteEndPoint.ToString(), len));
-                if(len <= data.Length - 6)
-                {
-                    ForwardPhoto(data);
-                }
-                else
-                {
-                    _imageLen = len;
-                    byte[] newBuffer = new byte[data.Length - 6]; 
-                    Array.ConstrainedCopy(data, 6, newBuffer, 0, (data.Length - 6));
-                    _imageBuffer = newBuffer;
-                    PrintConsole("(" + _imageBuffer.Length.ToString() + "/" + _imageLen + ") bytes received");
-                }
-            }
-            
-            else
-            {
-                byte[] newBuffer = new byte[data.Length + _imageBuffer.Length]; 
-                Array.ConstrainedCopy(this._imageBuffer, 0, newBuffer, 0, _imageBuffer.Length);
-                Array.ConstrainedCopy(data, 0, newBuffer, _imageBuffer.Length, data.Length);
-                _imageBuffer = newBuffer;
-                PrintConsole("(" + _imageBuffer.Length.ToString() + "/" + _imageLen + ") bytes received");
-                if (this._imageBuffer.Length >= _imageLen)
-                {
-                    PrintConsole("photo receiving completed");
-                    ForwardPhoto(data);
-                }
+                PrintConsole($"receive: Photo from {proxSocket.RemoteEndPoint} ({len} bytes)");
+
+                byte[] tempBuffer = new byte[data.Length - 6]; 
+                Array.ConstrainedCopy(data, 6, tempBuffer, 0, tempBuffer.Length);
+                ForwardPhoto(tempBuffer);
             }
         }
 
@@ -320,22 +349,28 @@ namespace MR_Server
         /// <param name="type">{sender,receiver,datatype},sender/receiver: 0.All, 1.Server, 2.HL, 3.AI. type:1.text, 2.image </param>
         private void Forward(byte[] data, byte[] type)
         {
-            foreach (var proxSocket in _clientProxSocketList)
+            byte[] len = {(byte)(data.Length/65536), (byte)((data.Length % 65536)/256), (byte)(data.Length % 256)};
+            byte[] sendBuffer = new byte[type.Length + len.Length + data.Length];
+            Array.ConstrainedCopy(type, 0, sendBuffer, 0, type.Length);
+            Array.ConstrainedCopy(len, 0, sendBuffer, type.Length, len.Length);
+            Array.ConstrainedCopy(data, 0, sendBuffer, type.Length + len.Length, data.Length);
+            PrintConsole($"{data.Length} bytes data forwarded, whole package length: {sendBuffer.Length} bytes");
+            foreach (var clientSocket in _clientProxSocketList)
             {
-                if (proxSocket.Connected)
+                if (clientSocket.Connected)
                 {
-                    proxSocket.Send(data, 0, data.Length, SocketFlags.None);
+                    clientSocket.Send(sendBuffer, 0, sendBuffer.Length, SocketFlags.None);
                 }
             }
         }
 
         /// <summary>
-        /// Forward photo from HoloLens to AI
+        /// Forward photo from HoloLens to AI,232
         /// </summary>
         /// <param name="data"></param>
         private void ForwardPhoto(byte[] data)
         {
-            Forward(data,new byte[] {1,3,2});
+            Forward(data,new byte[] {2,3,2});
             PrintConsole("Photo forwarded");
         }
         
@@ -346,16 +381,16 @@ namespace MR_Server
         /// <param name="type">{sender,receiver,datatype},sender/receiver: 0.All, 1.Server, 2.HL, 3.AI. type:1.text, 2.image </param>
         private void Send(string msg, byte[] type)
         {
+            byte[] msgByte = Encoding.Default.GetBytes(msg+ "$");
+            byte[] len = {(byte)(msgByte.Length/65536), (byte)((msgByte.Length % 65536)/256), (byte)(msgByte.Length % 256)};
+            byte[] sendBuffer = new byte[type.Length + len.Length + msgByte.Length];
+            Array.ConstrainedCopy(type, 0, sendBuffer, 0, type.Length);
+            Array.ConstrainedCopy(len, 0, sendBuffer, type.Length, len.Length);
+            Array.ConstrainedCopy(msgByte, 0, sendBuffer, type.Length + len.Length, msgByte.Length);
             foreach (var proxSocket in _clientProxSocketList)
             {
                 if (proxSocket.Connected)
                 {
-                    byte[] MsgByte = Encoding.Default.GetBytes(msg+ "$");
-                    byte[] len = {(byte)(MsgByte.Length/65536), (byte)((MsgByte.Length % 65536)/256), (byte)(MsgByte.Length % 256)};
-                    byte[] sendBuffer = new byte[type.Length + len.Length + MsgByte.Length];
-                    Array.ConstrainedCopy(type, 0, sendBuffer, 0, type.Length);
-                    Array.ConstrainedCopy(len, 0, sendBuffer, type.Length, len.Length);
-                    Array.ConstrainedCopy(MsgByte, 0, sendBuffer, type.Length + len.Length, MsgByte.Length);
                     proxSocket.Send(sendBuffer, 0, sendBuffer.Length, SocketFlags.None);
                 }
             }
@@ -481,7 +516,7 @@ namespace MR_Server
             string sec = DateTime.Now.Second.ToString().PadLeft(2, '0');
             //string milisec = DateTime.Now.Millisecond.ToString().PadLeft(3, '0');
             string CurrentTimeText = string.Format("{0:D2}:{1:D2}:{2:D2}", hour, min, sec);
-            Console.WriteLine("(" + CurrentTimeText + ") UDP: " + string.Format("{0}", txt));
+            Console.WriteLine("(" + CurrentTimeText + ")UDP: " + string.Format("{0}", txt));
         }
     }
 }
