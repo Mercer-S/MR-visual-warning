@@ -1,23 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\s3767614\\Mercer\\git\\MR-visual-warning\\MR_Server\\MR_Server\\MR_Server.csproj": {}
+    "E:\\Reasearch\\Development\\2023\\MR-visual-warning\\MR-visual-warning\\MR_Server\\MR_Server\\MR_Server.csproj": {}
   },
   "projects": {
-    "C:\\Users\\s3767614\\Mercer\\git\\MR-visual-warning\\MR_Server\\MR_Server\\MR_Server.csproj": {
+    "E:\\Reasearch\\Development\\2023\\MR-visual-warning\\MR-visual-warning\\MR_Server\\MR_Server\\MR_Server.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\s3767614\\Mercer\\git\\MR-visual-warning\\MR_Server\\MR_Server\\MR_Server.csproj",
+        "projectUniqueName": "E:\\Reasearch\\Development\\2023\\MR-visual-warning\\MR-visual-warning\\MR_Server\\MR_Server\\MR_Server.csproj",
         "projectName": "MR_Server",
-        "projectPath": "C:\\Users\\s3767614\\Mercer\\git\\MR-visual-warning\\MR_Server\\MR_Server\\MR_Server.csproj",
-        "packagesPath": "C:\\Users\\s3767614\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\s3767614\\Mercer\\git\\MR-visual-warning\\MR_Server\\MR_Server\\obj\\",
+        "projectPath": "E:\\Reasearch\\Development\\2023\\MR-visual-warning\\MR-visual-warning\\MR_Server\\MR_Server\\MR_Server.csproj",
+        "packagesPath": "C:\\Users\\AdminMercer\\.nuget\\packages\\",
+        "outputPath": "E:\\Reasearch\\Development\\2023\\MR-visual-warning\\MR-visual-warning\\MR_Server\\MR_Server\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+          "D:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\s3767614\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\AdminMercer\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -76,7 +77,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.203\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.302\\RuntimeIdentifierGraph.json"
         }
       }
     }

@@ -14,7 +14,7 @@ namespace MR_Server
     {
         static void Main(string[] args)
         {
-            string ipAddressServer = "172.31.19.217";
+            string ipAddressServer = "192.168.1.104";
             string udpPort = "9998";
             string tcpPort = "9999";
             
@@ -71,7 +71,6 @@ namespace MR_Server
 
             Thread.Sleep(1000);
             ReadConsoleMessage(tcpServer);
-            
         }
 
         private static void ReadConsoleMessage(TcpServer tcpServer)
@@ -127,10 +126,10 @@ namespace MR_Server
         private readonly string _portServer;
         
         /// <summary>
-        /// 
+        /// TcpServer constructor
         /// </summary>
-        /// <param name="ipAddressServer"></param>
-        /// <param name="portServer"></param>
+        /// <param name="ipAddressServer">the ip address of the server</param>
+        /// <param name="portServer">the accessible port of the server</param>
         public TcpServer(string ipAddressServer, string portServer)
         { 
             _ipAddressServer = ipAddressServer; 
@@ -140,7 +139,7 @@ namespace MR_Server
         /// <summary>
         /// Start the TCP server 
         /// </summary>
-        /// <returns></returns>
+        /// <returns>void</returns>
         public void TcpServerStart()
         {
             Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -443,18 +442,19 @@ namespace MR_Server
 
     public class UdpServer
     {
-        private EndPoint _endPoint;
-
+        private EndPoint _serverEP;
+        private List<EndPoint> _clientEPList = new List<EndPoint>();
+        
         /// <summary>
-        /// define server IP and Port. The port should be accessible.
+        /// UDP server constructor.
         /// </summary>
         /// <param name="ipAddressServer"></param>
         /// <param name="portServer"></param>
         public UdpServer(string ipAddressServer, string portServer)
         {
-            _endPoint = new IPEndPoint(IPAddress.Parse(ipAddressServer), int.Parse(portServer));
+            _serverEP = new IPEndPoint(IPAddress.Parse(ipAddressServer), int.Parse(portServer));
         }
-
+        
         /// <summary>
         /// Start the UDP server 
         /// </summary>
@@ -465,14 +465,13 @@ namespace MR_Server
             
             try
             {
-                serverSocket.Bind(_endPoint);
+                serverSocket.Bind(_serverEP);
             }
             catch
             {
                 Console.WriteLine("UDP socket: Wrong IP address and/or Port.");
                 return;
             }
-
             ThreadPool.QueueUserWorkItem(new WaitCallback(ReceiveData), serverSocket);
         }
 
@@ -483,14 +482,22 @@ namespace MR_Server
         void ReceiveData(object socket)
         {
             Socket proxSocket = socket as Socket;
+            PrintConsole($"proxsocket: {proxSocket.RemoteEndPoint}");
             PrintConsole("UDP Socket generated.");
             while (true)
             {
                 byte[] buffer = new byte[64];
-                int len = proxSocket.ReceiveFrom(buffer, SocketFlags.None, ref _endPoint);
-                string data = Encoding.Default.GetString(buffer, 0, len);
-                PrintConsole(data);
-                ForwardData(data, proxSocket);
+                EndPoint _tempEP = _serverEP;
+                int len = proxSocket.ReceiveFrom(buffer, SocketFlags.None, ref _tempEP);
+                string msg = Encoding.Default.GetString(buffer, 0, len);
+                string[] data = msg.Split('$');
+                if (data[0] == "require data")
+                {
+                    _clientEPList.Add(_tempEP);
+                    PrintConsole($"Client {_tempEP} has been added to the send list");
+                }
+                PrintConsole($"{_tempEP}: {data[0]}");
+                ForwardData(data[0], proxSocket);
             }
         }
         
@@ -502,7 +509,11 @@ namespace MR_Server
         void ForwardData(string data, Socket socket)
         {
             byte[] btData = Encoding.Default.GetBytes(data + "$");
-            socket.SendTo(btData, 0, btData.Length, SocketFlags.None, _endPoint);
+            foreach( EndPoint clientEP in _clientEPList)
+            {
+                socket.SendTo(btData, 0, btData.Length, SocketFlags.None, clientEP);
+            }
+            
         }
         
         /// <summary>

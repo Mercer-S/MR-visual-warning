@@ -1,23 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\s3767614\\Mercer\\git\\MR-visual-warning\\MR_Photo_Receiver\\MR_Photo_Receiver\\MR_Photo_Receiver.csproj": {}
+    "E:\\Reasearch\\Development\\2023\\MR-visual-warning\\MR-visual-warning\\MR_Photo_Receiver\\MR_Photo_Receiver\\MR_Photo_Receiver.csproj": {}
   },
   "projects": {
-    "C:\\Users\\s3767614\\Mercer\\git\\MR-visual-warning\\MR_Photo_Receiver\\MR_Photo_Receiver\\MR_Photo_Receiver.csproj": {
+    "E:\\Reasearch\\Development\\2023\\MR-visual-warning\\MR-visual-warning\\MR_Photo_Receiver\\MR_Photo_Receiver\\MR_Photo_Receiver.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\s3767614\\Mercer\\git\\MR-visual-warning\\MR_Photo_Receiver\\MR_Photo_Receiver\\MR_Photo_Receiver.csproj",
+        "projectUniqueName": "E:\\Reasearch\\Development\\2023\\MR-visual-warning\\MR-visual-warning\\MR_Photo_Receiver\\MR_Photo_Receiver\\MR_Photo_Receiver.csproj",
         "projectName": "MR_Photo_Receiver",
-        "projectPath": "C:\\Users\\s3767614\\Mercer\\git\\MR-visual-warning\\MR_Photo_Receiver\\MR_Photo_Receiver\\MR_Photo_Receiver.csproj",
-        "packagesPath": "C:\\Users\\s3767614\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\s3767614\\Mercer\\git\\MR-visual-warning\\MR_Photo_Receiver\\MR_Photo_Receiver\\obj\\",
+        "projectPath": "E:\\Reasearch\\Development\\2023\\MR-visual-warning\\MR-visual-warning\\MR_Photo_Receiver\\MR_Photo_Receiver\\MR_Photo_Receiver.csproj",
+        "packagesPath": "C:\\Users\\AdminMercer\\.nuget\\packages\\",
+        "outputPath": "E:\\Reasearch\\Development\\2023\\MR-visual-warning\\MR-visual-warning\\MR_Photo_Receiver\\MR_Photo_Receiver\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+          "D:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\s3767614\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\AdminMercer\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -48,8 +49,7 @@
             "net47",
             "net471",
             "net472",
-            "net48",
-            "net481"
+            "net48"
           ],
           "assetTargetFallback": true,
           "warn": true,
@@ -58,7 +58,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.203\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.302\\RuntimeIdentifierGraph.json"
         }
       }
     }
